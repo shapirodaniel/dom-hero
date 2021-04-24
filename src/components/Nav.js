@@ -1,5 +1,5 @@
-import { Component } from '../core/component';
-import { NavLink } from './';
+import { Component } from '../core';
+import { Logo, NavLink } from './';
 
 let props = {
 	navLinks: [
@@ -18,25 +18,15 @@ let props = {
 	],
 };
 
-const lazyGetOwnHTML = () => {
-	return `
+const navMarkup = () => `
   <nav>
-    <h3 id='logo'>RF</h3>
-    <div
-      style='
-        font-size: .8em;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 400px;
-      '
-    >
+    ${Logo.embed()}
+    <div class='navLinksContainer'>
       ${Nav.props.navLinks.map(link => NavLink.embed(link)).join('')}
     </div>
   </nav>
-  `;
-};
+`;
 
-const Nav = new Component(props, lazyGetOwnHTML);
+const Nav = new Component(props, navMarkup);
 
 export default Nav;

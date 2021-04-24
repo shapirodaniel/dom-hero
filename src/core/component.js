@@ -1,4 +1,4 @@
-import { propsRegistry, refreshDOM } from './window';
+import { propsRegistry, refreshDOM } from './';
 import { v4 as uuidv4 } from 'uuid';
 
 export class Component {

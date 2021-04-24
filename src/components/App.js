@@ -1,34 +1,12 @@
-import { propsRegistry } from '../core/window';
-import { Component } from '../core/component';
-import { Nav, RandomWords, Textarea } from './';
+import { propsRegistry, Component } from '../core';
+import { Nav } from './';
 
-let props = {
-	isBannerVisible: true,
+let props = {};
 
-	hideBanner(componentKey) {
-		propsRegistry[componentKey] = {
-			...propsRegistry[componentKey],
-			isBannerVisible: false,
-		};
-
-		App.update(propsRegistry[componentKey]);
-	},
-};
-
-const lazyGetOwnHTML = () => `
-
+const appMarkup = () => `
 		${Nav.embed()}
-
-		${RandomWords.embed(
-			propsRegistry[RandomWords.key] && {
-				...propsRegistry[RandomWords.key],
-				hideBanner: App.props.hideBanner,
-			}
-		)}
-
-		${Textarea.embed()}
 `;
 
-const App = new Component(props, lazyGetOwnHTML);
+const App = new Component(props, appMarkup);
 
 export default App;
