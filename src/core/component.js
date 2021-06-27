@@ -1,73 +1,51 @@
-import { propsRegistry, refreshDOM } from './';
 import { v4 as uuidv4 } from 'uuid';
 
+/*
+
+	props: Map {
+		propNameString: prop,
+		callbackFn: [nodeKey, handlerName]
+		...
+	}
+
+	handlerName is a valid eventListener type string
+	ex., onclick, onblur, onfocusin, etc.
+
+	nodeKey is a unique, DOM-valid node identifier string
+
+	* we're using Map because we know that every fn in props will necessarily
+		be an eventHandler, since any other func we would want to invoke
+		will be accessible on the eventListener closure, so we wouldn't include it in props!
+*/
+
 export class Component {
-	constructor(props = {}, lazyGetOwnHTML = () => null) {
+	constructor(jsx) {
+		this.jsx = jsx;
 		this.key = uuidv4();
-		this.props = props;
-		this.lazyGetOwnHTML = lazyGetOwnHTML;
-		this.ownTree;
+		this.props = new Map();
+		this.markup;
 	}
 
-	buildComponentTree() {
-		// assign props to propsRegistry
-		// this will allow updated props
-		// to be used to build lazyGetOwnHTML
-		propsRegistry[this.key] = this.props;
-
-		// every component tree is built on a
-		// root div with attribute key = this.key
-		// this allows refreshDOM to locate the component
-		// in the DOM and replace it on renders
-		let newRoot = document.createElement('div');
-		newRoot.setAttribute('key', this.key);
-		newRoot.innerHTML = this.lazyGetOwnHTML();
-
-		this.ownTree = newRoot;
+	attachEventHandlers() {
+		for (let [key, value] of this.props)
+			if (key instanceof Function) {
+				const [nodeKey, handlerName] = value;
+				this.markup
+					.querySelector(`key=['${nodeKey}']`)
+					.addEventListener(handlerName, key);
+			}
 	}
 
-	// update method should be called inside any prop updater fn on this.props
-	update(newProps) {
-		this.props = newProps;
-		this.buildComponentTree();
-		refreshDOM(this.key, this.ownTree);
+	embed(targetNode) {
+		this.attachEventHandlers();
+		targetNode.children.length && targetNode.contains(this.markup)
+			? targetNode.replaceChild(targetNode.lastElementChild, this.markup)
+			: targetNode.appendChild(this.markup);
 	}
 
-	useProp(propNameAsString) {
-		return propsRegistry && propsRegistry[this.key]
-			? propsRegistry[this.key][propNameAsString]
-			: this.props[propNameAsString];
-	}
-
-	// this fn takes a string repr of a fn expression name,
-	// a componentKey, and any number of optional args
-	// and embeds the event listener directly in the element
-	usePropUpdater(funcNameAsString, componentKey = this.key) {
-		// data allows us to pass any arguments we like into this fn
-		// we'll map, stringify, and join them to setup the eventListener
-		const additionalArgs = Array.from(arguments).slice(2);
-
-		const command = `window.propsRegistry['${componentKey}'].${funcNameAsString}(${
-			additionalArgs.length
-				? `'${componentKey}'` +
-				  `${additionalArgs.map(arg => `, '${arg}'`).join('')}`
-				: `'${componentKey}'`
-		})`;
-
-		return command;
-	}
-
-	// (all but the top-level component)
-	// this function should be used to embed the component's outerHTML
-	// in its parent component's lazyGetOwnHTML() markup
-	// optional newProps argument allows component instance to "borrow",
-	// ie copy props from another component instance
-	embed(newProps) {
-		if (newProps) {
-			this.props = newProps;
-		}
-
-		this.buildComponentTree();
-		return this.ownTree.outerHTML;
+	useProp(propNameString) {
+		// supports lazyEval props, prop: () => prop
+		const prop = this.props.get(propNameString);
+		return prop instanceof Function ? prop() : prop;
 	}
 }

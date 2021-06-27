@@ -1,2 +1,2 @@
-export { propsRegistry, refreshDOM } from './window';
+export { addInlinePropsToComponent, build } from './buildUtils';
 export { Component } from './component';

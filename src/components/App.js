@@ -1,12 +1,12 @@
-import { propsRegistry, Component } from '../core';
+import { Component } from '../core';
 import { Nav } from './';
 
-let props = {};
+const appMarkup = (
+	<div>
+		<Nav />
+	</div>
+);
 
-const appMarkup = () => `
-		${Nav.embed()}
-`;
-
-const App = new Component(props, appMarkup);
+const App = new Component(appMarkup);
 
 export default App;
